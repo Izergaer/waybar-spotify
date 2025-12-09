@@ -27,10 +27,17 @@ pub const State = struct {
 
     pub fn jsonStringify(value: State, jws: anytype) !void {
         try jws.beginObject();
+
         try jws.objectField("class");
-        try jws.write(if (value.playing) "playing" else "");
+        if (value.metadata.len == 0) {
+            try jws.write("stopped");
+        } else {
+            try jws.write(if (value.playing) "playing" else "paused");
+        }
+        
         try jws.objectField("text");
         try jws.write(value.metadata);
+        
         try jws.endObject();
     }
 };
@@ -98,6 +105,7 @@ pub fn main() !void {
                 state.metadata = try allocator.dupe(u8, output);
             }
         }
+
         try std.json.fmt(state, .{}).format(&writer.interface);
         try writer.interface.writeByte('\n');
         try writer.interface.flush();
